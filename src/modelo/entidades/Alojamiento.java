@@ -1,32 +1,61 @@
 package modelo.entidades;
 
+import util.UtilNumero;
+import util.UtilTexto;
+
 public abstract class Alojamiento {
     private String nombre;
     private double precioPorNoche;
 
     // Constructor
-    public Alojamiento(String nombre, double precioPorNoche) {
-        this.nombre = nombre;
-        this.precioPorNoche = precioPorNoche;
+    Alojamiento(String nombre, double precioPorNoche) {
+        setNombre(nombre);
+        setPrecioPorNoche(precioPorNoche);
     }
 
-    // Métodos abstractos (Abstracción)
+    // Constructor
+    private Alojamiento(final int numero) {
+        setNombre(UtilTexto.EMPTY);
+        setPrecioPorNoche(UtilNumero.ZERO_DOUBLE);
+    }
+
+    public static Alojamiento build(String nombre, double precioPorNoche){
+        return new Alojamiento(nombre, precioPorNoche) {
+            @Override
+            public String obtenerDescripcion() {
+                return "";
+            }
+        };
+    }
+
+    public static Alojamiento build(){
+        return new Alojamiento(0) {
+                    @Override
+                    public String obtenerDescripcion() {
+                        return "";
+                    }
+                };
+    }
+
+    // Métodos abstractos
     public abstract String obtenerDescripcion();
 
-    // Getters y Setters (Encapsulamiento)
+    // Getters y Setters
     public String getNombre() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public Alojamiento setNombre(String nombre) {
+        this.nombre = UtilTexto.applyTrim(nombre);
+        return this;
     }
 
     public double getPrecioPorNoche() {
         return precioPorNoche;
     }
 
-    public void setPrecioPorNoche(double precioPorNoche) {
+    public Alojamiento setPrecioPorNoche(double precioPorNoche) {
         this.precioPorNoche = precioPorNoche;
+        return this;
     }
 }
