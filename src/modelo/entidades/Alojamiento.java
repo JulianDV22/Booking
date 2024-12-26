@@ -6,6 +6,7 @@ import util.UtilTexto;
 public abstract class Alojamiento {
     private String nombre;
     private double precioPorNoche;
+    private String tipo;
 
     // Constructor
     Alojamiento(String nombre, double precioPorNoche) {
@@ -56,6 +57,15 @@ public abstract class Alojamiento {
 
     public Alojamiento setPrecioPorNoche(double precioPorNoche) {
         this.precioPorNoche = precioPorNoche;
+        return this;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public Alojamiento setTipo(String tipo) {
+        this.tipo = UtilTexto.applyTrim(tipo);
         return this;
     }
 }

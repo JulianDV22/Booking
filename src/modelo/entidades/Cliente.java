@@ -4,6 +4,9 @@ import util.UtilObjeto;
 import util.UtilTexto;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Cliente {
     private String nombre;
@@ -94,6 +97,32 @@ public class Cliente {
     private Cliente setFechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = UtilObjeto.getUtilObjeto().getDefault(fechaNacimiento, LocalDate.now());
         return this;
+    }
+
+    // Convierte un objeto Cliente a una fila de Excel (toRow)
+    public List<String> toRow() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        List<String> row = new ArrayList<>();
+        row.add(nombre);
+        row.add(apellido);
+        row.add(email);
+        row.add(nacionalidad);
+        row.add(telefono);
+        row.add(fechaNacimiento.format(formatter));
+        return row;
+    }
+
+    // Crea un objeto Cliente desde una fila de Excel (fromRow)
+    public static Cliente fromRow(List<String> row) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return new Cliente(
+                row.get(0), // Nombre
+                row.get(1), // Apellido
+                row.get(2), // Email
+                row.get(3), // Nacionalidad
+                row.get(4), // Teléfono
+                LocalDate.parse(row.get(5), formatter) // Fecha de Nacimiento
+        );
     }
 }
 
