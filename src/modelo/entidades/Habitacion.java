@@ -61,4 +61,21 @@ public class Habitacion {
         this.precio = precio;
         return this;
     }
+
+    // Convierte un objeto Habitacion a una fila de Excel (toRow)
+    public List<String> toRow() {
+        List<String> row = new ArrayList<>();
+        row.add(tipo);
+        row.add(String.join(", ", caracteristicas)); // Convertir características a una cadena separada por comas
+        row.add(String.valueOf(precio));
+        return row;
+    }
+
+    // Crea un objeto Habitacion desde una fila de Excel (fromRow)
+    public static Habitacion fromRow(List<String> row) {
+        String tipo = row.get(0);
+        List<String> caracteristicas = List.of(row.get(1).split(", ")); // Convertir cadena a lista
+        double precio = Double.parseDouble(row.get(2));
+        return new Habitacion(tipo, caracteristicas, precio);
+    }
 }
