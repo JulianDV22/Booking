@@ -73,7 +73,7 @@ public class Reserva {
         return habitacion;
     }
 
-    private Reserva setHabitacion(Habitacion habitacion) {
+    public Reserva setHabitacion(Habitacion habitacion) {
         this.habitacion = UtilObjeto.getUtilObjeto().getDefault(habitacion, Habitacion.build());
         return this;
     }
