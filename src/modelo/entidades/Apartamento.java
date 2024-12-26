@@ -3,6 +3,9 @@ package modelo.entidades;
 import util.UtilNumero;
 import util.UtilTexto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Apartamento extends Alojamiento {
     private boolean amueblado;
 
@@ -41,5 +44,22 @@ public class Apartamento extends Alojamiento {
     public Apartamento setAmueblado(boolean amueblado) {
         this.amueblado = amueblado;
         return this;
+    }
+
+    // Método toRow: Convierte el Apartamento a una lista de cadenas
+    public List<String> toRow() {
+        List<String> row = new ArrayList<>();
+        row.add(getNombre());
+        row.add(String.valueOf(getPrecioPorNoche()));
+        row.add(String.valueOf(amueblado));
+        return row;
+    }
+
+    // Método fromRow: Crea un Apartamento desde una lista de cadenas
+    public static Apartamento fromRow(List<String> row) {
+        String nombre = row.get(0);
+        double precioPorNoche = Double.parseDouble(row.get(1));
+        boolean amueblado = Boolean.parseBoolean(row.get(2));
+        return Apartamento.build(nombre, precioPorNoche, amueblado);
     }
 }

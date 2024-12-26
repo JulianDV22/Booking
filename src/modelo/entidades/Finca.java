@@ -3,11 +3,14 @@ package modelo.entidades;
 import util.UtilNumero;
 import util.UtilTexto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Finca extends Alojamiento {
-    private int area;
+    private double area;
 
     // Constructor
-    private Finca(String nombre, double precioPorNoche, int area) {
+    private Finca(String nombre, double precioPorNoche, double area) {
         super(nombre, precioPorNoche);
         setTipo("Finca");
         setArea(area);
@@ -16,11 +19,11 @@ public class Finca extends Alojamiento {
     private Finca(final int numero) {
         super(UtilTexto.EMPTY, UtilNumero.ZERO_DOUBLE);
         setTipo("Finca");
-        setArea(UtilNumero.ZERO);
+        setArea(UtilNumero.ZERO_DOUBLE);
     }
 
     //Builders
-    public static Finca build(String nombre, double precioPorNoche, int area){
+    public static Finca build(String nombre, double precioPorNoche, double area){
         return new Finca(nombre, precioPorNoche, area);
     }
 
@@ -34,12 +37,29 @@ public class Finca extends Alojamiento {
     }
 
     // Getters y Setters
-    public int getArea() {
+    public double getArea() {
         return area;
     }
 
-    private Finca setArea(int area) {
+    private Finca setArea(double area) {
         this.area = area;
         return this;
+    }
+
+    // Método toRow: Convierte la Finca a una lista de cadenas
+    public List<String> toRow() {
+        List<String> row = new ArrayList<>();
+        row.add(getNombre());
+        row.add(String.valueOf(getPrecioPorNoche()));
+        row.add(String.valueOf(area));
+        return row;
+    }
+
+    // Método fromRow: Crea una Finca desde una lista de cadenas
+    public static Finca fromRow(List<String> row) {
+        String nombre = row.get(0);
+        double precioPorNoche = Double.parseDouble(row.get(1));
+        double area = Double.parseDouble(row.get(2));
+        return new Finca(nombre, precioPorNoche, area);
     }
 }

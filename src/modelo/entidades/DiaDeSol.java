@@ -47,4 +47,20 @@ public class DiaDeSol extends Alojamiento{
         return this;
     }
 
+    // Método toRow: Convierte el Día de Sol a una lista de cadenas
+    public List<String> toRow() {
+        List<String> row = new ArrayList<>();
+        row.add(getNombre());
+        row.add(String.valueOf(getPrecioPorNoche()));
+        row.add(String.join(", ", actividades)); // Convierte la lista de actividades a una cadena separada por comas
+        return row;
+    }
+
+    // Método fromRow: Crea un Día de Sol desde una lista de cadenas
+    public static DiaDeSol fromRow(List<String> row) {
+        String nombre = row.get(0);
+        double precioPorNoche = Double.parseDouble(row.get(1));
+        List<String> actividades = List.of(row.get(2).split(", ")); // Convierte la cadena de actividades a una lista
+        return new DiaDeSol(nombre, precioPorNoche, actividades);
+    }
 }
