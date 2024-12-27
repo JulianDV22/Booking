@@ -24,5 +24,57 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../commons-io-2.18.0/commons-io-2.18.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/../commons-io-2.18.0/commons-io-2.18.0-tests.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../commons-io-2.18.0/commons-io-2.18.0-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/../commons-io-2.18.0/commons-io-2.18.0-test-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../commons-collections4-4.5.0-M3/commons-collections4-4.5.0-M3-tests.jar!/" />
+          <root url="jar://$MODULE_DIR$/../commons-collections4-4.5.0-M3/commons-collections4-4.5.0-M3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../commons-collections4-4.5.0-M3/commons-collections4-4.5.0-M3-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/../commons-collections4-4.5.0-M3/commons-collections4-4.5.0-M3-test-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../apache-xmlbeans-5.3.0/lib" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../apache-xmlbeans-5.3.0/lib" />
+        </SOURCES>
+        <jarDirectory url="file://$MODULE_DIR$/../apache-xmlbeans-5.3.0/lib" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/../apache-xmlbeans-5.3.0/lib" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../commons-compress-1.27.1/commons-compress-1.27.1-tests.jar!/" />
+          <root url="jar://$MODULE_DIR$/../commons-compress-1.27.1/commons-compress-1.27.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../commons-compress-1.27.1/commons-compress-1.27.1-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/../commons-compress-1.27.1/commons-compress-1.27.1-test-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

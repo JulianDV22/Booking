@@ -58,12 +58,22 @@ public class UtilExcel {
         }
     }
 
-    // Asegurar la existencia del archivo Excel y la hoja
-    public static void ensureFileExists(String filePath, String sheetName) throws IOException {
+    // Asegurar la existencia del archivo Excel y la hoja, con encabezados
+    public static void ensureFileExists(String filePath, String sheetName, List<String> headers) throws IOException {
         File file = new File(filePath);
         if (!file.exists()) {
             Workbook workbook = new XSSFWorkbook();
-            workbook.createSheet(sheetName);
+            Sheet sheet = workbook.createSheet(sheetName);
+
+            // Escribir encabezados si se proporcionan
+            if (headers != null && !headers.isEmpty()) {
+                Row headerRow = sheet.createRow(0);
+                for (int i = 0; i < headers.size(); i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(headers.get(i));
+                }
+            }
+
             try (FileOutputStream fos = new FileOutputStream(file)) {
                 workbook.write(fos);
             }
