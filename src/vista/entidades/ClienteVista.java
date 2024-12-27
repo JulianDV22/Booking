@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class ClienteVista {
 
-    public static void iniciarReserva() {
+    public static String iniciarReserva() {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("=== Iniciar Reserva ===");
@@ -43,5 +43,6 @@ public class ClienteVista {
             System.out.println(resultado);
             System.out.println("¡Bienvenido, " + nombre + "!");
         }
+        return email;
     }
 }

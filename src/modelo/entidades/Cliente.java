@@ -124,5 +124,17 @@ public class Cliente {
                 LocalDate.parse(row.get(5), formatter) // Fecha de Nacimiento
         );
     }
+
+    @Override
+    public String toString() {
+        return "Cliente{" +
+                "nombre='" + nombre + '\'' +
+                ", apellido='" + apellido + '\'' +
+                ", email='" + email + '\'' +
+                ", nacionalidad='" + nacionalidad + '\'' +
+                ", telefono='" + telefono + '\'' +
+                ", fechaNacimiento=" + fechaNacimiento +
+                '}';
+    }
 }
 

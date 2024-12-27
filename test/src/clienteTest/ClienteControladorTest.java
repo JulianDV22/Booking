@@ -1,4 +1,4 @@
-package ClienteTest;
+package clienteTest;
 
 import controlador.ClienteControlador;
 import modelo.entidades.Cliente;

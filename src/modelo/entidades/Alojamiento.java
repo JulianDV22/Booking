@@ -3,28 +3,38 @@ package modelo.entidades;
 import util.UtilNumero;
 import util.UtilTexto;
 
+import java.util.List;
+
 public abstract class Alojamiento {
     private String nombre;
     private double precioPorNoche;
     private String tipo;
+    private String ciudad;
 
     // Constructor
-    Alojamiento(String nombre, double precioPorNoche) {
+    Alojamiento(String nombre, double precioPorNoche, String ciudad) {
         setNombre(nombre);
         setPrecioPorNoche(precioPorNoche);
+        setCiudad(ciudad);
     }
 
     // Constructor
     private Alojamiento(final int numero) {
         setNombre(UtilTexto.EMPTY);
         setPrecioPorNoche(UtilNumero.ZERO_DOUBLE);
+        setCiudad(UtilTexto.EMPTY);
     }
 
-    public static Alojamiento build(String nombre, double precioPorNoche){
-        return new Alojamiento(nombre, precioPorNoche) {
+    public static Alojamiento build(String nombre, double precioPorNoche, String ciudad){
+        return new Alojamiento(nombre, precioPorNoche, ciudad) {
             @Override
             public String obtenerDescripcion() {
                 return "";
+            }
+
+            @Override
+            public List<String> toRow() {
+                return List.of();
             }
         };
     }
@@ -35,7 +45,12 @@ public abstract class Alojamiento {
                     public String obtenerDescripcion() {
                         return "";
                     }
-                };
+
+            @Override
+            public List<String> toRow() {
+                return List.of();
+            }
+        };
     }
 
     // Métodos abstractos
@@ -68,4 +83,26 @@ public abstract class Alojamiento {
         this.tipo = UtilTexto.applyTrim(tipo);
         return this;
     }
+
+    public String getCiudad() {
+        return ciudad;
+    }
+
+    public Alojamiento setCiudad(String ciudad) {
+        this.ciudad = UtilTexto.applyTrim(ciudad);
+        return this;
+    }
+
+    public abstract List<String> toRow();
+
+    @Override
+    public String toString() {
+        return "Alojamiento{" +
+                "nombre='" + nombre + '\'' +
+                ", precioPorNoche=" + precioPorNoche +
+                ", tipo='" + tipo + '\'' +
+                ", ciudad='" + ciudad + '\'' +
+                '}';
+    }
+
 }

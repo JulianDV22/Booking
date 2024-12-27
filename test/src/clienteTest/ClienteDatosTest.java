@@ -1,4 +1,4 @@
-package ClienteTest;
+package clienteTest;
 
 import modelo.datos.ClienteDatos;
 import modelo.entidades.Cliente;
