@@ -1,29 +1,32 @@
 package modelo.entidades;
 
-import util.UtilNumero;
-import util.UtilObjeto;
-import util.UtilTexto;
+import util.UtilNumber;
+import util.UtilObject;
+import util.UtilText;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Hotel extends Alojamiento{
-    private int calificacion;
+public class Hotel extends Accommodation {
+    private Integer calificacion;
     private List<String> actividades;
+    private static final UtilObject utilObject = UtilObject.getInstance();
+    private static final UtilText utilText = UtilText.getInstance();
+    private static final UtilNumber utilNumber = UtilNumber.getInstance();
 
     // Constructor
     private Hotel(String nombre, double precioPorNoche, String ciudad, int calificacion, List<String> actividades) {
         super(nombre, precioPorNoche, ciudad);
-       setTipo("Hotel");
+       setType("Hotel");
        setCalificacion(calificacion);
        setActividades(actividades);
     }
 
     private Hotel(final int numero) {
-        super(UtilTexto.EMPTY, UtilNumero.ZERO_DOUBLE, UtilTexto.EMPTY);
-        setTipo("Hotel");
-        setCalificacion(UtilNumero.ZERO);
-        setActividades(UtilObjeto.LISTA_STRING);
+        super(utilText.EMPTY, utilNumber.ZERO_DOUBLE, utilText.EMPTY);
+        setType("Hotel");
+        setCalificacion(utilNumber.ZERO);
+        setActividades(utilObject.LISTA_STRING);
     }
 
     //Builders
@@ -33,11 +36,6 @@ public class Hotel extends Alojamiento{
 
     public static Hotel build(){
         return new Hotel(0);
-    }
-
-    @Override
-    public String obtenerDescripcion() {
-        return "Hotel: " + getNombre() + ", Calificación: " + calificacion;
     }
 
     // Getters y Setters
@@ -55,17 +53,17 @@ public class Hotel extends Alojamiento{
     }
 
     private Hotel setActividades(List<String> actividades) {
-        this.actividades = UtilObjeto.getUtilObjeto().getDefault(actividades, new ArrayList<>());
+        this.actividades = utilObject.getUtilObjeto().getDefault(actividades, new ArrayList<>());
         return this;
     }
 
     @Override
     public List<String> toRow() {
         List<String> row = new ArrayList<>();
-        row.add(getNombre()); // Nombre del hotel
-        row.add(String.valueOf(getPrecioPorNoche())); // Precio por noche
-        row.add(getTipo()); // Tipo (siempre "Hotel")
-        row.add(getCiudad()); // Ciudad
+        row.add(getName()); // Nombre del hotel
+        row.add(String.valueOf(getPricePerNight())); // Precio por noche
+        row.add(getType()); // Tipo (siempre "Hotel")
+        row.add(getCity()); // Ciudad
         row.add(String.valueOf(calificacion)); // Calificación del hotel
         row.add(String.join(", ", actividades)); // Actividades separadas por comas
         return row;
@@ -73,7 +71,7 @@ public class Hotel extends Alojamiento{
 
     // Método auxiliar para convertir fila a objeto Hotel
     public static Hotel fromRow(List<String> row) {
-        if (row.size() < 6) {
+        if (row.size() > 6) {
             throw new IllegalArgumentException("La fila no tiene suficientes datos: " + row);
         }
 
@@ -86,15 +84,13 @@ public class Hotel extends Alojamiento{
         return Hotel.build(nombre, precioPorNoche, ciudad, calificacion, actividades);
     }
 
-
-
     @Override
     public String toString() {
         return "Hotel{" +
-                "nombre='" + getNombre() + '\'' +
-                ", precioPorNoche=" + getPrecioPorNoche() +
-                ", tipo='" + getTipo() + '\'' +
-                ", ciudad='" + getCiudad() + '\'' +
+                "nombre='" + getName() + '\'' +
+                ", precioPorNoche=" + getPricePerNight() +
+                ", tipo='" + getType() + '\'' +
+                ", ciudad='" + getCity() + '\'' +
                 ", calificacion=" + calificacion +
                 " habitaciones, actividades=" + String.join(", ", actividades) +
                 '}';

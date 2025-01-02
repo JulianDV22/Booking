@@ -1,22 +1,27 @@
 package util;
 
-import modelo.entidades.Habitacion;
+import modelo.entidades.Room;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class UtilObjeto {
+public class UtilObject {
     public static final List<String> LISTA_STRING = new ArrayList<>();
-    public static final List<Habitacion> LISTA_OBJETO = new ArrayList<>();
+    public static final List<Room> LISTA_OBJETO = new ArrayList<>();
+    private static UtilObject instance;
 
-    private static final UtilObjeto instance = new UtilObjeto();
+    public static UtilObject getInstance() {
+        if (instance == null) {
+            instance = new UtilObject();
+        }
+        return instance;
+    }
 
-
-    private UtilObjeto() {
+    private UtilObject() {
         super();
     }
 
-    public static final UtilObjeto getUtilObjeto() {
+    public static final UtilObject getUtilObjeto() {
         return instance;
     }
 

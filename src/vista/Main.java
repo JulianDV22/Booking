@@ -1,7 +1,7 @@
 package vista;
 
-import vista.entidades.ClienteVista;
-import vista.entidades.ReservaVista;
+import vista.entidades.ClientView;
+import vista.entidades.BookingView;
 
 import java.util.Scanner;
 
@@ -22,16 +22,16 @@ public class Main {
 
             switch (opcion) {
                 case 1 -> {
-                    mostrarSubmenuAlojamientos();
+                    showAccommodationSubMenu();
                 }
-                case 2 -> ReservaVista.menuActualizarReserva();
+                case 2 -> BookingView.updateBookingMenu();
                 case 0 -> System.out.println("Saliendo del sistema...");
                 default -> System.out.println("Opción inválida. Por favor, intente nuevamente.");
             }
         } while (opcion != 0);
     }
 
-    public static void mostrarSubmenuAlojamientos() {
+    public static void showAccommodationSubMenu() {
         Scanner scanner = new Scanner(System.in);
         int opcionAlojamiento;
 
@@ -47,10 +47,9 @@ public class Main {
             scanner.nextLine(); // Consumir salto de línea
 
             switch (opcionAlojamiento) {
-                case 1 -> ReservaVista.menuReservarHotel(ClienteVista.iniciarReserva());
-                case 2 -> ReservaVista.menuReservarApartamento(ClienteVista.iniciarReserva());
-                case 3 -> ReservaVista.menuReservarFinca(ClienteVista.iniciarReserva());
-                case 4 -> ReservaVista.menuReservarDiaDeSol(ClienteVista.iniciarReserva());
+                case 1 -> BookingView.bookingHotelMenu(ClientView.startBooking());
+                case 2 -> BookingView.bookingApartmentMenu(ClientView.startBooking());
+                case 3 -> BookingView.bookingFarmMenu(ClientView.startBooking());
                 case 0 -> System.out.println("Regresando al menú principal...");
                 default -> System.out.println("Opción inválida. Por favor, intente nuevamente.");
             }

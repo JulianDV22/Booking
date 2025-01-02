@@ -1,6 +1,6 @@
 package hotelTest;
 
-import modelo.datos.HotelDatos;
+import modelo.datos.HotelData;
 import modelo.entidades.Hotel;
 
 import java.io.IOException;
@@ -18,28 +18,28 @@ public class HotelDatosTest {
             Hotel hotel2 = Hotel.build("Hotel Andes", 250.0, "Bogota", 4, List.of("Gimnasio", "Salón de eventos", "Restaurante gourmet"));
             Hotel hotel3 = Hotel.build("Hotel Pacific", 200.0, "Medellin", 3, List.of("Terraza", "Bar", "WiFi gratis"));
 
-            HotelDatos.crearHotel(hotel1);
-            HotelDatos.crearHotel(hotel2);
-            HotelDatos.crearHotel(hotel3);
+            HotelData.createHotel(hotel1);
+            HotelData.createHotel(hotel2);
+            HotelData.createHotel(hotel3);
             System.out.println("Hoteles creados exitosamente.");
 
             // Leer todos los Hoteles
             System.out.println("\n--- Leer Todos los Hoteles ---");
-            List<Hotel> hoteles = HotelDatos.leerHoteles();
+            List<Hotel> hoteles = HotelData.findHotels();
             for (Hotel hotel : hoteles) {
                 System.out.println(hotel);
             }
 
             // Buscar Hoteles por Ciudad
             System.out.println("\n--- Buscar Hoteles por Ciudad (Bogota) ---");
-            List<Hotel> hotelesBogota = HotelDatos.buscarPorCiudad("Bogota");
+            List<Hotel> hotelesBogota = HotelData.findByCity("Bogota");
             for (Hotel hotel : hotelesBogota) {
                 System.out.println(hotel);
             }
 
             // Buscar Hotel por Nombre
             System.out.println("\n--- Buscar Hotel por Nombre (Hotel Andes) ---");
-            Hotel hotelAndes = HotelDatos.buscarPorNombre("Hotel Andes");
+            Hotel hotelAndes = HotelData.findByName("Hotel Andes");
             if (hotelAndes != null) {
                 System.out.println("Encontrado: " + hotelAndes);
             } else {
@@ -49,18 +49,18 @@ public class HotelDatosTest {
             // Actualizar Hotel
             System.out.println("\n--- Actualizar Hotel (Hotel Andes) ---");
             Hotel hotelActualizado = Hotel.build("Hotel Andes", 275.0, "Bogota", 5, List.of("Piscina climatizada", "Gimnasio", "Restaurante gourmet"));
-            HotelDatos.actualizarHotel("Hotel Andes", "Bogota", hotelActualizado);
+            HotelData.updateHotel("Hotel Andes", "Bogota", hotelActualizado);
             System.out.println("Hotel Andes actualizado.");
-            List<Hotel> hotelesActualizados = HotelDatos.leerHoteles();
+            List<Hotel> hotelesActualizados = HotelData.findHotels();
             for (Hotel hotel : hotelesActualizados) {
                 System.out.println(hotel);
             }
 
             // Eliminar Hotel
             System.out.println("\n--- Eliminar Hotel (Hotel Pacific) ---");
-            HotelDatos.eliminarHotel("Hotel Pacific", "Medellin");
+            HotelData.deleteHotel("Hotel Pacific", "Medellin");
             System.out.println("Hotel Pacific eliminado.");
-            List<Hotel> hotelesDespuesEliminacion = HotelDatos.leerHoteles();
+            List<Hotel> hotelesDespuesEliminacion = HotelData.findHotels();
             for (Hotel hotel : hotelesDespuesEliminacion) {
                 System.out.println(hotel);
             }

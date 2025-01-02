@@ -1,15 +1,15 @@
 package vista.entidades;
 
-import controlador.ClienteControlador;
-import modelo.entidades.Cliente;
+import controlador.ClientController;
+import modelo.entidades.Client;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
-public class ClienteVista {
+public class ClientView {
 
-    public static String iniciarReserva() {
+    public static String startBooking() {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("=== Iniciar Reserva ===");
@@ -17,11 +17,11 @@ public class ClienteVista {
         String email = scanner.nextLine();
 
         // Buscar cliente por email
-        Cliente cliente = ClienteControlador.buscarClientePorEmail(email);
+        Client client = ClientController.findClientByEmail(email);
 
-        if (cliente != null) {
+        if (client != null) {
             // Cliente encontrado
-            System.out.println("¡Bienvenido, " + cliente.getNombre() + "!");
+            System.out.println("¡Bienvenido, " + client.getName() + "!");
         } else {
             // Cliente no encontrado, registrar nuevo cliente
             System.out.println("El email ingresado no está registrado. Complete el formulario para registrarse.");
@@ -39,7 +39,7 @@ public class ClienteVista {
             LocalDate fechaNacimiento = LocalDate.parse(fechaNacimientoStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
             // Registrar nuevo cliente
-            String resultado = ClienteControlador.registrarNuevoCliente(nombre, apellido, email, nacionalidad, telefono, fechaNacimiento);
+            String resultado = ClientController.registerNewClient(nombre, apellido, email, nacionalidad, telefono, fechaNacimiento);
             System.out.println(resultado);
             System.out.println("¡Bienvenido, " + nombre + "!");
         }

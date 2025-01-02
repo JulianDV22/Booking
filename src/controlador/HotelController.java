@@ -1,18 +1,18 @@
 package controlador;
 
-import modelo.datos.HotelDatos;
+import modelo.datos.HotelData;
 import modelo.entidades.Hotel;
 
 import java.io.IOException;
 import java.util.List;
 
-public class HotelControlador {
+public class HotelController {
 
     // Crear un hotel
-    public static String crearHotel(String nombre, double precioPorNoche, String ciudad, int calificacion, List<String> actividades) {
+    public static String createHotel(String name, double pricePerNight, String city, int rating, List<String> activities) {
         try {
-            Hotel hotel = Hotel.build(nombre, precioPorNoche, ciudad, calificacion, actividades);
-            HotelDatos.crearHotel(hotel);
+            Hotel hotel = Hotel.build(name, pricePerNight, city, rating, activities);
+            HotelData.createHotel(hotel);
             return "Hotel creado exitosamente.";
         } catch (IOException e) {
             return "Error al crear el hotel: " + e.getMessage();
@@ -20,9 +20,9 @@ public class HotelControlador {
     }
 
     // Listar todos los hoteles
-    public static List<Hotel> listarHoteles() {
+    public static List<Hotel> findHotels() {
         try {
-            return HotelDatos.leerHoteles();
+            return HotelData.findHotels();
         } catch (IOException e) {
             System.out.println("Error al listar los hoteles: " + e.getMessage());
             return List.of();
@@ -30,10 +30,10 @@ public class HotelControlador {
     }
 
     // Actualizar un hotel
-    public static String actualizarHotel(String nombre, String ciudad, String nuevoNombre, double nuevoPrecioPorNoche, int nuevaCalificacion, List<String> nuevasActividades) {
+    public static String updateHotel(String name, String city, String newName, double newPricePerNight, int newRating, List<String> newActivities) {
         try {
-            Hotel nuevoHotel = Hotel.build(nuevoNombre, nuevoPrecioPorNoche, ciudad, nuevaCalificacion, nuevasActividades);
-            HotelDatos.actualizarHotel(nombre, ciudad, nuevoHotel);
+            Hotel newHotel = Hotel.build(newName, newPricePerNight, city, newRating, newActivities);
+            HotelData.updateHotel(name, city, newHotel);
             return "Hotel actualizado exitosamente.";
         } catch (IOException e) {
             return "Error al actualizar el hotel: " + e.getMessage();
@@ -41,9 +41,9 @@ public class HotelControlador {
     }
 
     // Eliminar un hotel
-    public static String eliminarHotel(String nombre, String ciudad) {
+    public static String deleteHotel(String name, String city) {
         try {
-            HotelDatos.eliminarHotel(nombre, ciudad);
+            HotelData.deleteHotel(name, city);
             return "Hotel eliminado exitosamente.";
         } catch (IOException e) {
             return "Error al eliminar el hotel: " + e.getMessage();
@@ -51,9 +51,9 @@ public class HotelControlador {
     }
 
     // Buscar hoteles por ciudad
-    public static List<Hotel> buscarHotelesPorCiudad(String ciudad) {
+    public static List<Hotel> findHotelByCity(String city) {
         try {
-            return HotelDatos.buscarPorCiudad(ciudad);
+            return HotelData.findByCity(city);
         } catch (IOException e) {
             System.out.println("Error al buscar hoteles por ciudad: " + e.getMessage());
             return List.of();
@@ -61,9 +61,9 @@ public class HotelControlador {
     }
 
     // Buscar hotel por nombre
-    public static Hotel buscarHotelPorNombre(String nombre) {
+    public static Hotel findHotelByName(String name) {
         try {
-            return HotelDatos.buscarPorNombre(nombre);
+            return HotelData.findByName(name);
         } catch (IOException e) {
             System.out.println("Error al buscar el hotel por nombre: " + e.getMessage());
             return null;
