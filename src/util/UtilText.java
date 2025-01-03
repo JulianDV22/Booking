@@ -21,7 +21,7 @@ public class UtilText {
     }
 
     public static final boolean isNull(final String string) {
-        return getUtilObjeto().isNUll(string);
+        return getUtilObjeto().isNull(string);
     }
 
     public static final boolean isNullOrEmpty(final String string) {
@@ -43,7 +43,7 @@ public class UtilText {
     public static final String concatenate(final String... strings) {
         final var sb = new StringBuilder(EMPTY);
 
-        if (!UtilObject.getUtilObjeto().isNUll(strings)) {
+        if (!UtilObject.getUtilObjeto().isNull(strings)) {
             for (final var string : strings) {
                 sb.append(applyTrim(string));
             }

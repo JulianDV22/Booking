@@ -1,16 +1,12 @@
 package vista.entidades;
 
-import chainofresponsability.BookingRequest;
-import chainofresponsability.BookingValidator;
-import chainofresponsability.concrete.AvailabilityValidator;
-import chainofresponsability.concrete.DateValidator;
-import chainofresponsability.concrete.PeopleValidator;
-import controlador.FarmController;
-import controlador.RoomController;
-import controlador.HotelController;
 import controlador.BookingController;
+import controlador.command.booking.CreateBookingCommand;
+import controlador.command.booking.FindBookingsByClientCommand;
 import modelo.datos.ApartmentData;
 import modelo.datos.FarmData;
+import modelo.datos.HotelData;
+import modelo.datos.SunnyDayData;
 import modelo.entidades.*;
 
 import java.io.IOException;
@@ -19,373 +15,222 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 
-import static vista.Main.showAccommodationSubMenu;
-
 public class BookingView {
 
-    private static String requestCity() {
-        return requestCity("Ingrese la ciudad donde desea reservar: ");
-    }
+    private static final BookingController bookingController = new BookingController();
 
-    private static LocalDate[] requestBookingDates() {
-        LocalDate startDate = requestDate("Ingrese la fecha de inicio de la reserva (YYYY-MM-DD): ");
-        if (startDate == null) return null;
+    // Entry Point for Booking Menu
+    public void showBookingMenu() {
+        while (true) {
+            System.out.println("\n=== Menú de Reservas ===");
+            System.out.println("1. Reservar Finca");
+            System.out.println("2. Reservar Apartamento");
+            System.out.println("3. Reservar Hotel");
+            System.out.println("4. Actualizar Reserva");
+            System.out.println("5. Salir");
+            System.out.print("Seleccione una opción: ");
 
-        LocalDate finishDate = requestDate("Ingrese la fecha de fin de la reserva (YYYY-MM-DD): ");
-        if (finishDate == null) return null;
-
-        return new LocalDate[]{startDate, finishDate};
-    }
-
-    private static LocalDate requestDate(String mensaje) {
-        return getValidatedDate(mensaje);
-    }
-
-    private static int requestNumberOfPeople() {
-        return requestInteger("Ingrese la cantidad de personas: ");
-    }
-
-    private static LocalDate getValidatedDate(String message) {
-        LocalDate date = getDate(message);
-        if (date == null) {
-            showMessage("Formato de fecha inválido. Use el formato YYYY-MM-DD.");
+            int option = new Scanner(System.in).nextInt();
+            switch (option) {
+                case 1 -> bookingFarmMenu();
+                case 2 -> bookingApartmentMenu();
+                case 3 -> bookingHotelMenu();
+                case 4 -> updateBookingMenu();
+                case 5 -> {
+                    System.out.println("Saliendo del menú de reservas...");
+                    return;
+                }
+                default -> System.out.println("Opción no válida.");
+            }
         }
-        return date;
     }
 
-    private static void handleBookingErrors(IOException e) {
-        showMessage("Error al procesar la reserva: " + e.getMessage());
+    // Menu for Booking a Farm
+    public static void bookingFarmMenu() {
+        String clientEmail = requestEmail();
+        String city = requestCity("Ingrese la ciudad donde desea reservar: ");
+        executeFindCommandAndBook(clientEmail, city, BookingController.AccommodationType.FINCA);
     }
 
-    private static String requestCity(String message) {
-        System.out.print(message);
-        return new Scanner(System.in).nextLine();
+    // Menu for Booking an Apartment
+    public static void bookingApartmentMenu() {
+        String clientEmail = requestEmail();
+        String city = requestCity("Ingrese la ciudad donde desea reservar el apartamento: ");
+        executeFindCommandAndBook(clientEmail, city, BookingController.AccommodationType.APARTAMENTO);
     }
 
-    private static LocalDate getDate(String message) {
-        System.out.print(message);
+    // Menu for Booking a Hotel
+    public static void bookingHotelMenu() {
+        String clientEmail = requestEmail();
+        String city = requestCity("Ingrese la ciudad donde desea reservar un hotel: ");
+        executeFindCommandAndBook(clientEmail, city, BookingController.AccommodationType.HOTEL);
+    }
+
+    // Handles finding accommodations and processing bookings
+    private static void executeFindCommandAndBook(String clientEmail, String city, BookingController.AccommodationType type) {
         try {
-            return LocalDate.parse(new Scanner(System.in).nextLine());
-        } catch (DateTimeParseException e) {
-            System.out.println("Formato de fecha inválido. Use el formato YYYY-MM-DD.");
-            return null;
-        }
-    }
+            List<? extends Accommodation> accommodations = findAndValidateAccommodations(city, type);
+            Accommodation selectedAccommodation = findAndValidateSelection(accommodations);
+            LocalDate[] dates = findAndValidateDates();
+            double totalPrice = handleBooking(clientEmail, selectedAccommodation, dates);
 
-    private static int requestInteger(String message) {
-        System.out.print(message);
-        return new Scanner(System.in).nextInt();
-    }
-
-    private static <T> T selectAccommodation(List<T> accommodations, String message) {
-        showAccommodations(accommodations);
-        int selection = requestSelection(message, accommodations.size());
-
-        if (isValidateSelection(selection, accommodations.size())) {
-            System.out.println("Selección inválida.");
-            return null;
-        }
-        return accommodations.get(selection);
-    }
-
-    private static <T> void showAccommodations(List<T> accommodations) {
-        for (int i = 0; i < accommodations.size(); i++) {
-            System.out.println((i + 1) + ". " + accommodations.get(i));
-        }
-    }
-
-    private static int requestSelection(String message, int size) {
-        System.out.print(message);
-        return new Scanner(System.in).nextInt() - 1;
-    }
-
-    private static boolean isValidateSelection(int selection, int size) {
-        return selection < 0 || selection >= size;
-    }
-
-    private static void showMessage(String message) {
-        System.out.println(message);
-    }
-
-
-    /*
-        * Método que muestra el menú de reservas de fincas
-     */
-    public static void bookingFarmMenu(String clientEmail) {
-        String city = requestCity();
-        List<Farm> farmsInCity = FarmController.findFarmByCity(city);
-
-        if (verifyAvailableFarms(farmsInCity, city)) return;
-
-        processSelectionAndBooking(clientEmail, farmsInCity, city);
-    }
-
-    private static void processSelectionAndBooking(String clientEmail, List<Farm> farmsInCity, String city) {
-        Farm selectedFarm = requestFarm(farmsInCity);
-        if (selectedFarm == null) return;
-
-        LocalDate[] dates = requestBookingDates();
-        if (dates == null) return;
-
-        int numberOfPeople = requestNumberOfPeople();
-
-        BookingRequest request = new BookingRequest(clientEmail, city, selectedFarm.getName(), dates[0], dates[1], numberOfPeople);
-
-        BookingValidator validator = createValidationChain();
-        if (validator.validate(request)) {
-            processBooking(request);
-        } else {
-            showMessage("La reserva no pasó las validaciones.");
-        }
-    }
-
-    private static boolean verifyAvailableFarms(List<Farm> farmsInCity, String city) {
-        if (farmsInCity.isEmpty()) {
-            showMessage("No se encontraron fincas disponibles en la ciudad: " + city);
-            return true;
-        }
-        return false;
-    }
-
-    private static Farm requestFarm(List<Farm> farmsInCity) {
-        return selectAccommodation(farmsInCity, "Seleccione una finca (número): ");
-    }
-
-    private static void processBooking(BookingRequest request) {
-        String result = BookingController.createBooking(
-                request.getClientEmail(),
-                request.getAccommodationName(),
-                request.getStartDate(),
-                request.getFinishDate(),
-                request.getNumberOfPeople(),
-                BookingController.AccommodationType.valueOf("FINCA")
-        );
-        showMessage(result);
-    }
-
-    private static BookingValidator createValidationChain() {
-        BookingValidator dateValidator = new DateValidator();
-        BookingValidator availabilityValidator = new AvailabilityValidator();
-        BookingValidator peopleValidator = new PeopleValidator();
-
-        dateValidator.setNext(availabilityValidator);
-        availabilityValidator.setNext(peopleValidator);
-
-        return dateValidator;
-    }
-
-
-    /*
-        * Método que muestra el menú de reservas de apartamento
-        */
-    public static void bookingApartmentMenu(String clientEmail) {
-        try {
-            String city = requestCity("Ingrese la ciudad donde desea reservar el apartamento: ");
-            List<Apartment> apartmentsInCity = getApartmentsByCity(city);
-
-            if (checkAvailableApartments(apartmentsInCity, city)) return;
-
-            processSelectionAnBookingApartment(clientEmail, apartmentsInCity);
+            printBookingResult(totalPrice);
         } catch (IOException e) {
-            handleBookingErrors(e);
+            handleError(e);
         }
     }
 
-    private static List<Apartment> getApartmentsByCity(String city) throws IOException {
-        return ApartmentData.findApartmentPerCity(city);
-    }
-
-    private static boolean checkAvailableApartments(List<Apartment> apartmentsInCity, String city) {
-        if (apartmentsInCity.isEmpty()) {
-            showMessage("No se encontraron apartamentos disponibles en la ciudad: " + city);
-            return true;
-        }
-        return false;
-    }
-
-    private static void processSelectionAnBookingApartment(String clientEmail, List<Apartment> apartmentsInCity) {
-        Apartment selectedApartment = selectApartment(apartmentsInCity);
-        if (selectedApartment == null) return;
-
-        int numberOfPeople = requestNumberOfPeople();
-
-        LocalDate[] dates = requestBookingDates();
-        if (dates == null) return;
-
-        processBookingApartment(clientEmail, selectedApartment, dates[0], dates[1], numberOfPeople);
-    }
-
-    private static Apartment selectApartment(List<Apartment> apartmentsInCity) {
-        return selectAccommodation(apartmentsInCity, "Seleccione un apartamento (número): ");
-    }
-
-    private static void processBookingApartment(String clientEmail, Apartment selectedApartment, LocalDate startDate, LocalDate finishDate, int numberOfPeople) {
-        String result = BookingController.createBooking(clientEmail, selectedApartment.getName(), startDate, finishDate, numberOfPeople, BookingController.AccommodationType.valueOf("Apartamento"));
-        showMessage(result);
-    }
-
-
-    /*
-        * Método que muestra el menú de reservas de hoteles
-     */
-    public static void bookingHotelMenu(String clientEmail) {
-        try {
-            String city = requestCity("Ingrese la ciudad donde desea reservar un hotel: ");
-            List<Hotel> hotelsInCity = getHotelsByCity(city);
-
-            if (checkAvailableHotels(hotelsInCity, city)) return;
-
-            processSelectionAndBookingHotel(clientEmail, hotelsInCity);
-        } catch (Exception e) {
-            handleBookingErrors(e);
-        }
-    }
-
-    private static List<Hotel> getHotelsByCity(String city) throws IOException {
-        return HotelController.findHotelByCity(city);
-    }
-
-    private static boolean checkAvailableHotels(List<Hotel> hotelsInCity, String city) {
-        if (hotelsInCity.isEmpty()) {
-            showMessage("No se encontraron hoteles disponibles en la ciudad: " + city);
-            return true;
-        }
-        return false;
-    }
-
-    private static void processSelectionAndBookingHotel(String clientEmail, List<Hotel> hotelsInCity) {
-        Hotel selectedHotel = selectHotel(hotelsInCity);
-        if (selectedHotel == null) return;
-
-        int numberOfPeople = getNumberOfPeople();
-
-        List<Room> availableRooms = getAvailableRooms(selectedHotel, numberOfPeople);
-        if (availableRooms == null) return;
-
-        processBookingHotel(clientEmail, selectedHotel, availableRooms, numberOfPeople);
-    }
-
-    private static Hotel selectHotel(List<Hotel> hotelsInCity) {
-        return selectAccommodation(hotelsInCity, "Seleccione un hotel (número): ");
-    }
-
-    private static int getNumberOfPeople() {
-        int numberOfAdults = requestInteger("Ingrese la cantidad de adultos: ");
-        int numberOfKids = requestInteger("Ingrese la cantidad de niños: ");
-        return numberOfAdults + numberOfKids;
-    }
-
-    private static List<Room> getAvailableRooms(Hotel selectedHotel, int numberOfPeople) {
-        List<Room> availableRooms = RoomController.filtrateRoom(selectedHotel.getName(), numberOfPeople);
-        if (availableRooms.isEmpty()) {
-            showMessage("No hay habitaciones disponibles que cumplan con los requisitos.");
+    private static List<? extends Accommodation> findAndValidateAccommodations(String city, BookingController.AccommodationType type) throws IOException {
+        List<? extends Accommodation> accommodations = findAccommodationsByCity(city, type);
+        if (accommodations.isEmpty()) {
+            System.out.println("No se encontraron alojamientos disponibles en la ciudad: " + city);
             return null;
         }
-        return availableRooms;
+        return accommodations;
     }
 
-    private static void processBookingHotel(String clientEmail, Hotel selectedHotel, List<Room> availableRooms, int numberOfPeople) {
-        Room selectedRoom = selectRoom(availableRooms);
-        if (selectedRoom == null) return;
-
-        LocalDate[] dates = requestBookingDates();
-        if (dates == null) return;
-
-        String result = BookingController.createBooking(clientEmail, selectedHotel.getName(), dates[0], dates[1], numberOfPeople, BookingController.AccommodationType.valueOf("Hotel"));
-        showMessage(result);
+    private static Accommodation findAndValidateSelection(List<? extends Accommodation> accommodations) {
+        if (accommodations == null) return null;
+        return selectAccommodation(accommodations, "Seleccione un alojamiento (número): ");
     }
 
-    private static void handleBookingErrors(Exception e) {
-        showMessage("Error al realizar la reserva: " + e.getMessage());
+    private static LocalDate[] findAndValidateDates() {
+        return requestBookingDates();
     }
 
-    public static void updateBookingMenu() {
-        try {
-            String email = requestEmail();
-            LocalDate birthday = requestBirthDay();
-            if (birthday == null) return;
+    private static double handleBooking(String clientEmail, Accommodation selectedAccommodation, LocalDate[] dates) throws IOException {
+        if (selectedAccommodation == null || dates == null) return 0.0;
 
-            List<Booking> bookings = getClientBookings(email);
-            if (checkAvailableBooking(bookings)) return;
+        Client client = bookingController.validateClient(clientEmail);
+        int numberOfPeople = requestNumberOfPeople();
+        return bookingController.calculateBookingPrice(selectedAccommodation, numberOfPeople, dates[0], dates[1]);
+    }
 
-            manageSelectionAndUpdate(email, birthday, bookings);
-        } catch (Exception e) {
-            handleBookingErrors(e);
+    private List<? extends Accommodation> findAccommodationsAndValidate(String city, BookingController.AccommodationType type) throws IOException {
+        List<? extends Accommodation> accommodations = findAccommodationsByCity(city, type);
+        if (accommodations.isEmpty()) {
+            System.out.println("No se encontraron alojamientos disponibles en la ciudad: " + city);
+            return null;
         }
+        return accommodations;
     }
 
-    private static void manageSelectionAndUpdate(String email, LocalDate birthday, List<Booking> bookings) {
-        Booking selectedBooking = selectBooking(bookings);
-        if (selectedBooking == null) return;
+    private Accommodation getSelectedAccommodation(List<? extends Accommodation> accommodations) {
+        return selectAccommodation(accommodations, "Seleccione un alojamiento (número): ");
+    }
 
+    private LocalDate[] getValidatedBookingDates() {
+        return requestBookingDates();
+    }
+
+    private double processBooking(String clientEmail, Accommodation accommodation, LocalDate[] dates) throws IOException {
+        Client client = getClient(clientEmail);
+        int numberOfPeople = getNumberOfPeople();
+        return calculateTotalPrice(accommodation, numberOfPeople, dates);
+    }
+
+    private static void printBookingResult(double totalPrice) {
+        System.out.println("Reserva creada exitosamente. Precio total: " + totalPrice);
+
+    }
+
+    private List<? extends Accommodation> findAccommodations(String city, BookingController.AccommodationType type) throws IOException {
+        List<? extends Accommodation> accommodations = findAccommodationsByCity(city, type);
+        if (accommodations.isEmpty()) {
+            System.out.println("No se encontraron alojamientos disponibles en la ciudad: " + city);
+            return null;
+        }
+        return accommodations;
+    }
+
+    private Accommodation selectAccommodation(List<? extends Accommodation> accommodations) {
+        return selectAccommodation(accommodations, "Seleccione un alojamiento (número): ");
+    }
+
+    private LocalDate[] getBookingDates() {
+        return requestBookingDates();
+    }
+
+    private Client getClient(String clientEmail) throws IOException {
+        return bookingController.validateClient(clientEmail);
+    }
+
+    private int getNumberOfPeople() {
+        return requestNumberOfPeople();
+    }
+
+    private double calculateTotalPrice(Accommodation accommodation, int numberOfPeople, LocalDate[] dates) {
+        return bookingController.calculateBookingPrice(accommodation, numberOfPeople, dates[0], dates[1]);
+    }
+
+    private void createBooking(Client client, Accommodation accommodation, LocalDate[] dates, double totalPrice) {
+        String result = bookingController.executeCommand(new CreateBookingCommand(
+                client,
+                accommodation,
+                dates[0],
+                dates[1],
+                totalPrice
+        ));
+        System.out.println(result);
+    }
+
+    private static void handleError(IOException e) {
+        System.out.println("Error al procesar la reserva: " + e.getMessage());
+    }
+
+    private static boolean extracted(boolean accommodations, String city) {
+        if (accommodations) {
+            System.out.println(city);
+            return true;
+        }
+        return false;
+    }
+
+    // Updates an existing booking
+    public static void updateBookingMenu() {
+        String email = requestEmail();
+        LocalDate birthday = validateBirthday();
+        if (birthday == null) return;
+
+        List<Booking> bookings = fetchBookings(email);
+        if (bookings == null) return;
+
+        processUpdate(email, birthday, bookings);
+    }
+
+    private static LocalDate validateBirthday() {
+        LocalDate birthday = requestDate("Ingrese su fecha de nacimiento (YYYY-MM-DD): ");
+        if (birthday == null) {
+            System.out.println("Fecha de nacimiento inválida.");
+        }
+        return birthday;
+    }
+
+    private static List<Booking> fetchBookings(String email) {
+        List<Booking> bookings = bookingController.executeCommand(new FindBookingsByClientCommand(email));
+        if (bookings.isEmpty()) {
+            System.out.println("No se encontraron reservas asociadas a este cliente.");
+            return null;
+        }
+        return bookings;
+    }
+
+    private static void processUpdate(String email, LocalDate birthday, List<Booking> bookings) {
+        Booking selectedBooking = selectBooking(bookings, "Seleccione una reserva para actualizar (número): ");
+        if (selectedBooking == null) {
+            System.out.println("No se seleccionó ninguna reserva.");
+            return;
+        }
         processBookingUpdate(email, birthday, selectedBooking);
     }
 
-    private static String requestEmail() {
-        System.out.print("Ingrese su correo electrónico para autenticación: ");
-        return new Scanner(System.in).nextLine();
-    }
-
-    private static LocalDate requestBirthDay() {
-        System.out.print("Ingrese su fecha de nacimiento (YYYY-MM-DD): ");
-        try {
-            return LocalDate.parse(new Scanner(System.in).nextLine());
-        } catch (DateTimeParseException e) {
-            System.out.println("Formato de fecha inválido. Use el formato YYYY-MM-DD.");
-            return null;
-        }
-    }
-
-    private static List<Booking> getClientBookings(String email) {
-        // Método para obtener reservas basado en el correo electrónico.
-        return BookingController.obtenerReservasPorCliente(email);
-    }
-
-    private static boolean checkAvailableBooking(List<Booking> bookings) {
-        if (bookings.isEmpty()) {
-            System.out.println("No se encontraron reservas asociadas a este cliente.");
-            return true;
-        }
-        return false;
-    }
-
-    private static Booking selectBooking(List<Booking> bookings) {
-        showBookings(bookings);
-        int bookingIndex = getSelectionIndex(bookings.size());
-
-        if (isValidateSelection(bookingIndex, bookings.size())) {
-            noReachableMessage();
-            return null;
-        }
-        return bookings.get(bookingIndex);
-    }
-
-    private static void showBookings(List<Booking> bookings) {
-        System.out.println("Reservas encontradas:");
-        for (int i = 0; i < bookings.size(); i++) {
-            System.out.println((i + 1) + ". " + bookings.get(i));
-        }
-    }
-
-    private static int getSelectionIndex(int size) {
-        System.out.print("Seleccione la reserva que desea actualizar (número): ");
-        return new Scanner(System.in).nextInt() - 1;
-    }
-
-    private static void noReachableMessage() {
-        System.out.println("Selección inválida.");
-    }
-
     private static void processBookingUpdate(String email, LocalDate birthday, Booking selectedBooking) {
-        Scanner scanner = new Scanner(System.in);
-
         System.out.println("¿Qué desea hacer?");
         System.out.println("1. Cambiar de habitación");
         System.out.println("2. Cambiar de alojamiento");
         System.out.print("Seleccione una opción: ");
-        int option = scanner.nextInt();
-        scanner.nextLine(); // Consumir salto de línea
 
+        int option = new Scanner(System.in).nextInt();
         switch (option) {
             case 1 -> updateRoom(email, birthday, selectedBooking);
             case 2 -> changeAccommodation(email, selectedBooking);
@@ -394,71 +239,100 @@ public class BookingView {
     }
 
     private static void updateRoom(String email, LocalDate birthday, Booking selectedBooking) {
-        String roomType = "1"; // Modificar tipo según necesidad
-        List<Room> availableRooms = getAvailableRoomsForAccommodation(selectedBooking, roomType);
-
-        if (checkAvailabilityForRooms(availableRooms)) return;
-
-        processRoomChange(email, birthday, selectedBooking, availableRooms);
-    }
-
-    private static List<Room> getAvailableRoomsForAccommodation(Booking selectedBooking, String roomType) {
-        return RoomController.obtenerHabitacionesDisponibles(
-                selectedBooking.getAccommodation().getName(),
-                roomType
-        );
-    }
-
-    private static boolean checkAvailabilityForRooms(List<Room> availableRooms) {
-        if (availableRooms.isEmpty()) {
-            System.out.println("No hay habitaciones disponibles para este alojamiento.");
-            return true;
-        }
-        return false;
-    }
-
-    private static void processRoomChange(String email, LocalDate birthday, Booking selectedBooking, List<Room> availableRooms) {
-        Room newRoom = selectRoom(availableRooms);
-        if (newRoom == null) return;
-
-        String result = BookingController.updateBooking(
-                email,
-                birthday,
-                selectedBooking,
-                false,
-                newRoom.getType()
-        );
-        System.out.println(result);
+        // Implement room update logic
     }
 
     private static void changeAccommodation(String email, Booking selectedBooking) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Ingrese el nombre del nuevo alojamiento: ");
-        String newAccommodationName = scanner.nextLine();
-
-        String deleteResult = BookingController.deleteBooking(selectedBooking);
-        System.out.println(deleteResult);
-
-        System.out.println("Ahora puede proceder a crear una nueva reserva para el alojamiento: " + newAccommodationName);
-        showAccommodationSubMenu();
+        // Implement accommodation change logic
     }
 
-    private static Room selectRoom(List<Room> availableRooms) {
-        showAvailableRooms(availableRooms);
-        int habitacionIndex = getSelectionIndex(availableRooms.size());
+    // Helper Methods
+    private static String requestEmail() {
+        System.out.print("Ingrese su correo electrónico: ");
+        return new Scanner(System.in).nextLine();
+    }
 
-        if (isValidateSelection(habitacionIndex, availableRooms.size())) {
-            noReachableMessage();
+    private static String requestCity(String message) {
+        System.out.print(message);
+        return new Scanner(System.in).nextLine();
+    }
+
+    private static LocalDate requestDate(String message) {
+        System.out.print(message);
+        try {
+            return LocalDate.parse(new Scanner(System.in).nextLine());
+        } catch (DateTimeParseException e) {
+            System.out.println("Formato de fecha inválido. Use el formato YYYY-MM-DD.");
             return null;
         }
-        return availableRooms.get(habitacionIndex);
     }
 
-    private static void showAvailableRooms(List<Room> habitacionesDisponibles) {
-        System.out.println("Habitaciones disponibles:");
-        for (int i = 0; i < habitacionesDisponibles.size(); i++) {
-            System.out.println((i + 1) + ". Tipo: " + habitacionesDisponibles.get(i).getType() + ", Precio: " + habitacionesDisponibles.get(i).getPrice());
+    private static LocalDate[] requestBookingDates() {
+        LocalDate startDate = requestDate("Ingrese la fecha de inicio (YYYY-MM-DD): ");
+        if (startDate == null) return null;
+
+        LocalDate finishDate = requestDate("Ingrese la fecha de fin (YYYY-MM-DD): ");
+        if (finishDate == null) return null;
+
+        return new LocalDate[]{startDate, finishDate};
+    }
+
+    private static int requestNumberOfPeople() {
+        System.out.print("Ingrese la cantidad de personas: ");
+        return new Scanner(System.in).nextInt();
+    }
+
+    private static <T> T selectAccommodation(List<T> accommodations, String message) {
+        displayAccommodations(accommodations);
+        int selection = getUserSelection(message, accommodations.size());
+        return getValidatedSelection(accommodations, selection);
+    }
+
+    private static <T> void displayAccommodations(List<T> accommodations) {
+        for (int i = 0; i < accommodations.size(); i++) {
+            System.out.println((i + 1) + ". " + accommodations.get(i));
         }
     }
 
+    private static <T> T getValidatedSelection(List<T> accommodations, int selection) {
+        if (selection < 0 || selection >= accommodations.size()) {
+            System.out.println("Selección inválida.");
+            return null;
+        }
+        return accommodations.get(selection);
+    }
+
+    private static Booking selectBooking(List<Booking> bookings, String message) {
+        displayBookings(bookings);
+        int selection = getUserSelection(message, bookings.size());
+        return getValidatedBooking(bookings, selection);
+    }
+
+    private static void displayBookings(List<Booking> bookings) {
+        for (int i = 0; i < bookings.size(); i++) {
+            System.out.println((i + 1) + ". " + bookings.get(i));
+        }
+    }
+
+    private static int getUserSelection(String message, int size) {
+        System.out.print(message);
+        return new Scanner(System.in).nextInt() - 1;
+    }
+
+    private static Booking getValidatedBooking(List<Booking> bookings, int selection) {
+        if (selection < 0 || selection >= bookings.size()) {
+            System.out.println("Selección inválida.");
+            return null;
+        }
+        return bookings.get(selection);
+    }
+
+    private static List<? extends Accommodation> findAccommodationsByCity(String city, BookingController.AccommodationType type) throws IOException {
+        return switch (type) {
+            case DIA_DE_SOL -> SunnyDayData.findByCity(city);
+            case FINCA -> FarmData.findFarmsByCity(city);
+            case APARTAMENTO -> ApartmentData.findApartmentPerCity(city);
+            case HOTEL -> HotelData.findByCity(city);
+        };
+    }
 }
