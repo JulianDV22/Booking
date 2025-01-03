@@ -1,5 +1,11 @@
 package vista.entidades;
 
+import chainofresponsability.BookingRequest;
+import chainofresponsability.BookingValidator;
+import chainofresponsability.concrete.AvailabilityValidator;
+import chainofresponsability.concrete.DateValidator;
+import chainofresponsability.concrete.PeopleValidator;
+import controlador.FarmController;
 import controlador.RoomController;
 import controlador.HotelController;
 import controlador.BookingController;
@@ -106,19 +112,15 @@ public class BookingView {
         * Método que muestra el menú de reservas de fincas
      */
     public static void bookingFarmMenu(String clientEmail) {
-        try {
-            String city = requestCity();
-            List<Farm> farmsInCity = getFarmByCity(city);
+        String city = requestCity();
+        List<Farm> farmsInCity = FarmController.findFarmByCity(city);
 
-            if (verifyAvailableFarms(farmsInCity, city)) return;
+        if (verifyAvailableFarms(farmsInCity, city)) return;
 
-            processSelectionAndBooking(clientEmail, farmsInCity);
-        } catch (IOException e) {
-            handleBookingErrors(e);
-        }
+        processSelectionAndBooking(clientEmail, farmsInCity, city);
     }
 
-    private static void processSelectionAndBooking(String clientEmail, List<Farm> farmsInCity) {
+    private static void processSelectionAndBooking(String clientEmail, List<Farm> farmsInCity, String city) {
         Farm selectedFarm = requestFarm(farmsInCity);
         if (selectedFarm == null) return;
 
@@ -127,12 +129,19 @@ public class BookingView {
 
         int numberOfPeople = requestNumberOfPeople();
 
-        processBooking(clientEmail, selectedFarm, dates[0], dates[1], numberOfPeople);
+        BookingRequest request = new BookingRequest(clientEmail, city, selectedFarm.getName(), dates[0], dates[1], numberOfPeople);
+
+        BookingValidator validator = createValidationChain();
+        if (validator.validate(request)) {
+            processBooking(request);
+        } else {
+            showMessage("La reserva no pasó las validaciones.");
+        }
     }
 
     private static boolean verifyAvailableFarms(List<Farm> farmsInCity, String city) {
         if (farmsInCity.isEmpty()) {
-            showMessage("No se encontraron fincas disponibles en la city: " + city);
+            showMessage("No se encontraron fincas disponibles en la ciudad: " + city);
             return true;
         }
         return false;
@@ -142,17 +151,27 @@ public class BookingView {
         return selectAccommodation(farmsInCity, "Seleccione una finca (número): ");
     }
 
-    private static void processBooking(String clientEmail, Farm selectedFarm, LocalDate startDate, LocalDate finishDate, int numberOfPeople) {
-        String result = processFarmBooking(clientEmail, selectedFarm, startDate, finishDate, numberOfPeople);
+    private static void processBooking(BookingRequest request) {
+        String result = BookingController.createBooking(
+                request.getClientEmail(),
+                request.getAccommodationName(),
+                request.getStartDate(),
+                request.getFinishDate(),
+                request.getNumberOfPeople(),
+                BookingController.AccommodationType.valueOf("FINCA")
+        );
         showMessage(result);
     }
 
-    private static List<Farm> getFarmByCity(String city) throws IOException {
-        return FarmData.findFarmsByCity(city);
-    }
+    private static BookingValidator createValidationChain() {
+        BookingValidator dateValidator = new DateValidator();
+        BookingValidator availabilityValidator = new AvailabilityValidator();
+        BookingValidator peopleValidator = new PeopleValidator();
 
-    private static String processFarmBooking(String clientEmail, Farm selectedFarm, LocalDate startDate, LocalDate finishDate, int numberOfPeople) {
-        return BookingController.createBooking(clientEmail, selectedFarm.getName(), startDate, finishDate, numberOfPeople, BookingController.AccommodationType.valueOf("Finca"));
+        dateValidator.setNext(availabilityValidator);
+        availabilityValidator.setNext(peopleValidator);
+
+        return dateValidator;
     }
 
 

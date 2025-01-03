@@ -205,14 +205,14 @@ public class BookingController {
 
     private static void printTicket(Booking booking, double basePrice) {
         Logger logger = Logger.getLogger(BookingController.class.getName());
-        logger.info("\n=== Factura de Reserva ===");
-        logger.info("Cliente: " + booking.getClient().getName() + " " + booking.getClient().getLastName());
-        logger.info("Alojamiento: " + booking.getAccommodation().getName());
-        logger.info("Fecha Inicio: " + booking.getStartDay());
-        logger.info("Fecha Fin: " + booking.getFinishDay());
-        logger.info(("Precio Base: $" + basePrice));
-        logger.info("Precio Total (con ajustes): $" + booking.getTotalPrice());
-        logger.info("========================\n");
+        System.out.println("\n=== Factura de Reserva ===");
+        System.out.println("Cliente: " + booking.getClient().getName() + " " + booking.getClient().getLastName());
+        System.out.println("Alojamiento: " + booking.getAccommodation().getName());
+        System.out.println("Fecha Inicio: " + booking.getStartDay());
+        System.out.println("Fecha Fin: " + booking.getFinishDay());
+        System.out.println(("Precio Base: $" + basePrice));
+        System.out.println("Precio Total (con ajustes): $" + booking.getTotalPrice());
+        System.out.println("========================\n");
     }
 
     private static Room findNewRoom(String accommodationName, String roomType) throws IOException {
