@@ -3,13 +3,24 @@ package util;
 import modelo.entidades.Room;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class UtilObject {
-    public static final List<String> LISTA_STRING = new ArrayList<>();
-    public static final List<Room> LISTA_OBJETO = new ArrayList<>();
+
+    // Listas constantes inicializadas con valores inmutables
+    public static final List<String> LISTA_STRING = Collections.unmodifiableList(new ArrayList<>());
+    public static final List<Room> LISTA_OBJETO = Collections.unmodifiableList(new ArrayList<>());
+
+    // Instancia Singleton
     private static UtilObject instance;
 
+    // Constructor privado para el patrón Singleton
+    private UtilObject() {
+        // Inicialización, si es necesario
+    }
+
+    // Método Singleton para obtener la instancia
     public static UtilObject getInstance() {
         if (instance == null) {
             instance = new UtilObject();
@@ -17,19 +28,18 @@ public class UtilObject {
         return instance;
     }
 
-    private UtilObject() {
-        super();
+    // Método de compatibilidad con el nombre anterior (opcional)
+    public static UtilObject getUtilObjeto() {
+        return getInstance();
     }
 
-    public static final UtilObject getUtilObjeto() {
-        return instance;
-    }
-
-    public final <T> boolean isNUll(T object) {
+    // Verifica si un objeto es nulo
+    public <T> boolean isNull(T object) {
         return object == null;
     }
 
-    public final <T> T getDefault(final T object, final T defaultObject) {
-        return isNUll(object) ? defaultObject : object;
+    // Devuelve un valor predeterminado si el objeto es nulo
+    public <T> T getDefault(T object, T defaultObject) {
+        return isNull(object) ? defaultObject : object;
     }
 }

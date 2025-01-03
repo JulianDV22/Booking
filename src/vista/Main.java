@@ -47,9 +47,9 @@ public class Main {
             scanner.nextLine(); // Consumir salto de línea
 
             switch (opcionAlojamiento) {
-                case 1 -> BookingView.bookingHotelMenu(ClientView.startBooking());
-                case 2 -> BookingView.bookingApartmentMenu(ClientView.startBooking());
-                case 3 -> BookingView.bookingFarmMenu(ClientView.startBooking());
+                case 1 -> BookingView.bookingHotelMenu();
+                case 2 -> BookingView.bookingApartmentMenu();
+                case 3 -> BookingView.bookingFarmMenu();
                 case 0 -> System.out.println("Regresando al menú principal...");
                 default -> System.out.println("Opción inválida. Por favor, intente nuevamente.");
             }

@@ -1,7 +1,9 @@
 package controlador;
 
+import controlador.command.Command;
 import modelo.datos.*;
 import modelo.entidades.*;
+import org.apache.poi.ss.formula.functions.T;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -11,161 +13,44 @@ import java.util.logging.Logger;
 
 public class BookingController {
 
-    public static String createBooking(String emailClient, String accommodationName, LocalDate startDate, LocalDate finishDate, int numberOfPeople, AccommodationType accommodationType) {
-        try {
-            Client client = validateClient(emailClient);
-            Accommodation accommodation = validateAccommodation(accommodationName, accommodationType);
-            double totalPrice = calculateBookingPrice(accommodation, numberOfPeople, startDate, finishDate);
-            return processBooking(client, accommodation, startDate, finishDate, totalPrice, accommodationType, accommodationName);
-        } catch (IOException e) {
-            return bookingErrorMessage(e);
-        }
+    // Ejecución de comandos
+    public <Booking> Booking executeCommand(Command<Booking> command) {
+        return command.execute();
     }
 
-    private static Client validateClient(String emailClient) throws IOException {
-        Client client = getClientOrMessage(emailClient);
+    // Validación de cliente
+    public Client validateClient(String emailClient) throws IOException {
+        Client client = ClientData.findByEmail(emailClient);
         if (client == null) {
-            throw new IllegalArgumentException(clientNotFoundMessage(emailClient));
+            throw new IllegalArgumentException("Cliente no encontrado con el correo: " + emailClient);
         }
         return client;
     }
 
-    private static Accommodation validateAccommodation(String accommodationName, AccommodationType accommodationType) throws IOException {
-        Accommodation accommodation = getAccommodationOrMessage(accommodationName, accommodationType);
+    // Validación de alojamiento
+    public Accommodation validateAccommodation(String accommodationName, AccommodationType accommodationType) throws IOException {
+        Accommodation accommodation = switch (accommodationType) {
+            case DIA_DE_SOL -> SunnyDayData.findByName(accommodationName);
+            case FINCA -> FarmData.findByName(accommodationName);
+            case APARTAMENTO -> ApartmentData.findPerName(accommodationName);
+            case HOTEL -> HotelData.findByName(accommodationName);
+        };
+
         if (accommodation == null) {
-            throw new IllegalArgumentException(accommodationNotFoundMessage(accommodationType, accommodationName));
+            throw new IllegalArgumentException(accommodationType + " no encontrado con el nombre: " + accommodationName);
         }
         return accommodation;
     }
 
-    private static String processBooking(Client client, Accommodation accommodation, LocalDate startDate, LocalDate finishDate, double totalPrice, AccommodationType accommodationType, String accommodationName) throws IOException {
-        return createAndRegisterBooking(client, accommodation, startDate, finishDate, totalPrice, accommodationType, accommodationName);
-    }
-
-    private static Client getClientOrMessage(String emailClient) throws IOException {
-        return authenticateClient(emailClient);
-    }
-
-    private static Accommodation getAccommodationOrMessage(String accommodationName, AccommodationType accommodationType) throws IOException {
-        return getAccommodation(accommodationName, accommodationType);
-    }
-
-    private static String clientNotFoundMessage(String emailClient) {
-        return "Cliente no encontrado con el correo: " + emailClient;
-    }
-
-    private static String accommodationNotFoundMessage(AccommodationType accommodationType, String accommodationName) {
-        return accommodationType + " no encontrado con el nombre: " + accommodationName;
-    }
-
-    private static String bookingErrorMessage(IOException e) {
-        return "Error al crear la reserva: " + e.getMessage();
-    }
-
-    private static Client authenticateClient(String emailClient) throws IOException {
-        return ClientData.findByEmail(emailClient);
-    }
-
-    private static Accommodation getAccommodation(String name, AccommodationType accommodationType) throws IOException {
-        return findAccommodationByType(name, accommodationType);
-    }
-
-    private static double calculateBookingPrice(Accommodation accommodation, int numberOfPeople, LocalDate startDate, LocalDate finishDate) {
-        long stayingDays = calculateStayingDays(startDate, finishDate);
+    // Cálculo del precio total de la reserva
+    public double calculateBookingPrice(Accommodation accommodation, int numberOfPeople, LocalDate startDate, LocalDate finishDate) {
+        long stayingDays = finishDate.toEpochDay() - startDate.toEpochDay();
         double basePrice = accommodation.getPricePerNight() * numberOfPeople * stayingDays;
         return calculateTotalPrice(basePrice, startDate, finishDate);
     }
 
-    private static String createAndRegisterBooking(Client client, Accommodation accommodation, LocalDate startDate, LocalDate finishDate, double totalPrice, AccommodationType accommodationType, String accommodationName) throws IOException {
-        Booking booking = Booking.build(client, accommodation, startDate, finishDate, totalPrice);
-        BookingData.createBooking(booking);
-        printTicket(booking, totalPrice / calculateStayingDays(startDate, finishDate));
-        return "Reserva creada exitosamente para " + accommodationType + ": " + accommodationName;
-    }
-
-    private static Accommodation findAccommodationByType(String name, AccommodationType type) throws IOException {
-        return switch (type) {
-            case DIA_DE_SOL -> SunnyDayData.findByName(name);
-            case FINCA -> FarmData.findByName(name);
-            case APARTAMENTO -> ApartmentData.findPerName(name);
-            case HOTEL -> HotelData.findByName(name);
-        };
-    }
-
-    private static long calculateStayingDays(LocalDate startDate, LocalDate finishDate) {
-        return finishDate.toEpochDay() - startDate.toEpochDay();
-    }
-
-    public static String updateBooking(String email, LocalDate birthday, Booking oldBooking, boolean changeAccommodation, String newRoomType) {
-        try {
-            Client client = validateAndAuthenticateClient(email, birthday);
-            return changeAccommodation ? handleAccommodationChange(oldBooking) : updateRoomDetails(client, oldBooking, newRoomType);
-        } catch (IOException e) {
-            return bookingUpdateErrorMessage(e);
-        }
-    }
-
-    private static Client validateAndAuthenticateClient(String email, LocalDate birthday) throws IOException {
-        Client client = authenticateClient(email, birthday);
-        if (client == null) {
-            throw new IllegalArgumentException("Error: Autenticación fallida. Verifica tu correo y fecha de nacimiento.");
-        }
-        return client;
-    }
-
-    private static String updateRoomDetails(Client client, Booking oldBooking, String newRoomType) throws IOException {
-        return updateRoom(client, oldBooking, newRoomType);
-    }
-
-    private static String bookingUpdateErrorMessage(IOException e) {
-        return "Error al actualizar la reserva: " + e.getMessage();
-    }
-
-    private static Client authenticateClient(String email, LocalDate fechaNacimiento) throws IOException {
-        Client client = ClientData.findByEmail(email);
-        return (client != null && client.getBirthday().equals(fechaNacimiento)) ? client : null;
-    }
-
-    private static String handleAccommodationChange(Booking oldBooking) throws IOException {
-        BookingData.deleteBooking(oldBooking);
-        return "La reserva existente ha sido eliminada. Por favor, cree una nueva reserva en el alojamiento deseado.";
-    }
-
-    private static String updateRoom(Client client, Booking olgBooking, String newRoomType) throws IOException {
-        Room newRoom = findNewRoom(olgBooking.getAccommodation().getName(), newRoomType);
-        if (newRoom == null) {
-            return "Error: No se encontró una habitación del tipo especificado en el mismo alojamiento.";
-        }
-
-        double newTotalPrice = calculateTotalPrice(
-                newRoom.getPrice(),
-                olgBooking.getStartDay(),
-                olgBooking.getFinishDay()
-        );
-
-        Booking newBooking = Booking.build(
-                client,
-                olgBooking.getAccommodation(),
-                olgBooking.getStartDay(),
-                olgBooking.getFinishDay(),
-                newTotalPrice
-        );
-
-        BookingData.updateBooking(olgBooking, newBooking);
-
-        return "Reserva actualizada exitosamente. Se cambió la habitación en el mismo alojamiento.";
-    }
-
-    public static String deleteBooking(Booking booking) {
-        try {
-            BookingData.deleteBooking(booking);
-            return "Reserva eliminada exitosamente.";
-        } catch (IOException e) {
-            return "Error al eliminar la reserva: " + e.getMessage();
-        }
-    }
-
-    private static double calculateTotalPrice(double basePrice, LocalDate startDate, LocalDate finishDate) {
+    // Lógica para calcular el precio con ajustes
+    private double calculateTotalPrice(double basePrice, LocalDate startDate, LocalDate finishDate) {
         int startDay = startDate.getDayOfMonth();
         int finishDay = finishDate.getDayOfMonth();
         LocalDate endOfMonth = startDate.with(TemporalAdjusters.lastDayOfMonth());
@@ -181,58 +66,32 @@ public class BookingController {
         return basePrice;
     }
 
-    private static boolean isDiscountRange(int startDay, int finishDay) {
+    private boolean isDiscountRange(int startDay, int finishDay) {
         return startDay >= 5 && finishDay <= 10;
     }
 
-    private static boolean isIncreaseRange(int startDay, int finishDay) {
+    private boolean isIncreaseRange(int startDay, int finishDay) {
         return startDay >= 10 && finishDay <= 15;
     }
 
-    private static boolean isEndOfMonthRange(int startDay, int finishDay, LocalDate endOfMonth) {
+    private boolean isEndOfMonthRange(int startDay, int finishDay, LocalDate endOfMonth) {
         int lastDay = endOfMonth.getDayOfMonth();
         return startDay >= lastDay - 4 || finishDay >= lastDay - 4;
     }
 
-    private static double applyDiscount(double basePrice, double percentage) {
+    private double applyDiscount(double basePrice, double percentage) {
         return basePrice - (basePrice * percentage);
     }
 
-    private static double applyIncrease(double basePrice, double percentage) {
+    private double applyIncrease(double basePrice, double percentage) {
         return basePrice + (basePrice * percentage);
     }
 
+    // Generar factura para la reserva
 
-    private static void printTicket(Booking booking, double basePrice) {
-        Logger logger = Logger.getLogger(BookingController.class.getName());
-        System.out.println("\n=== Factura de Reserva ===");
-        System.out.println("Cliente: " + booking.getClient().getName() + " " + booking.getClient().getLastName());
-        System.out.println("Alojamiento: " + booking.getAccommodation().getName());
-        System.out.println("Fecha Inicio: " + booking.getStartDay());
-        System.out.println("Fecha Fin: " + booking.getFinishDay());
-        System.out.println(("Precio Base: $" + basePrice));
-        System.out.println("Precio Total (con ajustes): $" + booking.getTotalPrice());
-        System.out.println("========================\n");
-    }
 
-    private static Room findNewRoom(String accommodationName, String roomType) throws IOException {
-        List<Room> availableRooms = RoomData.findByHotel(accommodationName);
-        return availableRooms.stream()
-                .filter(h -> h.isAvailable() && h.getType().equalsIgnoreCase(roomType))
-                .findFirst()
-                .orElse(null);
-    }
-
+    // Enumeración para tipos de alojamiento
     public enum AccommodationType {
         DIA_DE_SOL, FINCA, APARTAMENTO, HOTEL
-    }
-
-    public static List<Booking> obtenerReservasPorCliente (String email) {
-        try {
-            return BookingData.findByClient(email);
-        } catch (IOException e) {
-            Logger.getLogger(BookingController.class.getName()).severe("Error al obtener las reservas del cliente: " + e.getMessage());
-            return List.of();
-        }
     }
 }
